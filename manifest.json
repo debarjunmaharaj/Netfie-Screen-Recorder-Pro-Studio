@@ -1,4 +1,4 @@
-﻿{
+{
     "manifest_version":  3,
     "name":  "Recordly - Studio Screen Recorder",
     "version":  "1.0.0",
@@ -31,5 +31,19 @@
                                                            },
                                          "description":  "Open Recordly Studio"
                                      }
-                 }
+                 },
+    "web_accessible_resources":  [
+                                     {
+                                         "resources":  [
+                                                           "studio.js",
+                                                           "assets/*"
+                                                       ],
+                                         "matches":  [
+                                                         "\u003call_urls\u003e"
+                                                     ]
+                                     }
+                                 ],
+    "content_security_policy":  {
+                                    "extension_pages":  "script-src \u0027self\u0027 \u0027wasm-unsafe-eval\u0027; object-src \u0027self\u0027"
+                                }
 }
