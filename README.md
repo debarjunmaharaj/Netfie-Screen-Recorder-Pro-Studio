@@ -2,7 +2,7 @@
   <img src="https://camo.githubusercontent.com/74892fd47f89c1795cc700b6689b18c588ed37ee5920a58657c735258cfd3dc5/68747470733a2f2f6e65746669652e636f6d2f77702d636f6e74656e742f75706c6f6164732f323032352f30332f4e65746669655f5f315f2d72656d6f766562672d707265766965772d343530783137342e706e672e77656270" alt="Netfie Logo" width="380" />
 </p>
 
-# Netfie Screen Recorder â€” Pro Studio, Real-Time Vocal Isolator & Chrome Extension
+# Netfie Screen Recorder Pro Studio, Real-Time Vocal Isolator & Chrome Extension
 
 **Netfie Screen Recorder** is an advanced, 100% client-side studio recording application and official **Google Chrome Extension (Manifest V3)** designed for crystal-clear presentations, YouTube demos, tutorials, and social media reels.
 
