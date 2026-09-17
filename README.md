@@ -2,74 +2,72 @@
   <img src="https://camo.githubusercontent.com/74892fd47f89c1795cc700b6689b18c588ed37ee5920a58657c735258cfd3dc5/68747470733a2f2f6e65746669652e636f6d2f77702d636f6e74656e742f75706c6f6164732f323032352f30332f4e65746669655f5f315f2d72656d6f766562672d707265766965772d343530783137342e706e672e77656270" alt="Netfie Logo" width="380" />
 </p>
 
-# Recordly Studio Pro - Browser & Chrome Extension Screen Recorder
+# Netfie Screen Recorder â€” Pro Studio, Real-Time Vocal Isolator & Chrome Extension
 
-A 100% client-side, zero-install screen recorder inspired by **Recordly** with real-time DSP background noise cleaner, offline vocal separator, smart interactive zoom, background tab multi-capture, and MP4 export.
+**Netfie Screen Recorder** is an advanced, 100% client-side studio recording application and official **Google Chrome Extension (Manifest V3)** designed for crystal-clear presentations, YouTube demos, tutorials, and social media reels.
 
-Available as both a **standalone web app** and an installable **Google Chrome Extension (Manifest V3)**.
+Engineered with **real-time AudioWorklet spectral vocal isolation** (eliminates keyboard clatter, AC hum, fan roar, and ambient room noise on the fly), **smart click-to-zoom (up to 5.0x)**, **unthrottled background multi-tab capture**, and **Bright & Dark dashboard themes**.
 
 ---
 
 ## Key Features
 
-### 1. Presentation Canvas & Studio Effects
-- **Multi-Format Canvas**: One-click switching between **16:9** (YouTube/Demos), **9:16** (TikTok/Reels/Shorts), **1:1** (Square/Social), and **4:3**.
-- **Designer Backdrops**: Sunset gradient, Nordic minimal, Cyber neon, Emerald glow, blurred screen reflections, and dark studio themes.
-- **macOS Window Frame**: Authentic traffic-light controls (red, yellow, green), customizable window title, adjustable rounded corners, and deep drop shadows.
-- **Smart Focus & Auto-Zoom (Up to 5.0x)**: Click anywhere on the screen during recording or preview to smoothly zoom directly to that coordinate and automatically un-zoom after a customizable hold duration.
-- **Click Ripple Indicators**: Sleek animated rings highlight cursor clicks for tutorials and demos.
+### 1. Dual Bright & Dark Dashboard Modes
+- **One-Click Theme Toggle**: Instantly switch between an elegant, eye-friendly **Dark Studio** mode and a crisp, modern **Bright Light** mode.
+- **Theme Memory**: Automatically saves your preference in `localStorage` across studio sessions and popup launches.
+- **Refined Visuals**: Custom macOS chrome frames, gradient backdrop presets (Sunset, Nord, Cyber, Emerald), and smooth glassmorphism controls.
 
-### 2. Draggable Webcam Bubble
-- Picture-in-Picture webcam overlay.
-- Shapes: **Circle Bubble** or **Squircle (Rounded Square)**.
-- Freely draggable across the canvas stage, resizable slider, mirror camera toggle, and border stroke.
+### 2. Real-Time Spectral Vocal Isolation (AudioWorklet)
+- **Continuous Background Profiling**: Automatically listens to the background noise floor during pauses and subtracts it from the signal via spectral subtraction (Wiener filtering).
+- **Speech-Band Hard Masking**: Filters out everything outside the human vocal register (85Hz - 3,500Hz) so only clean speech reaches the recording.
+- **Dynamic Speech Gate & Compressor**: Eliminates low-volume room hiss and evens out loud audio spikes.
+- **Dedicated Mic Route**: System/screen audio does not contaminate the vocal isolation pipeline.
 
-### 3. Real-Time Web Audio DSP Noise Cleaner
-- **Sub-Rumble High-Pass Filter (<85Hz)**: Cuts desk bumps, floor rumble, and AC low frequencies.
-- **Speech Presence Peaking EQ (3.2kHz)**: Delivers podcast-grade vocal intelligibility and clarity.
-- **Dynamic Real-Time Noise Gate**: Auto-silences background room hiss and fan noise when not speaking.
-- **Dynamic Range Compressor**: Prevents microphone clipping and balances loudness.
-- **Live Decibel Meter & Speech Indicator**: Real-time visual feedback for audio levels and gate activation.
+### 3. Smart Focus & Auto-Zoom (Up to 5.0x)
+- **Interactive Click-to-Zoom**: Click anywhere on the canvas or screen preview to zoom directly into that coordinate smoothly and automatically zoom out after a customizable hold time.
+- **Zoom Level Controls**: Scale up from 1.0x to 5.0x with smooth panning and centered focus.
+- **Animated Click Ripples**: Highlights mouse clicks with radiant ripple indicators.
 
-### 4. Offline Vocal Separator & Stem Cleaner
-- Post-recording offline speech separator that isolates human vocals into clean `.wav` audio stems.
-- Background stem extraction to separate music and system audio from voice.
+### 4. Draggable Webcam Bubble
+- **Picture-in-Picture Bubble**: Overlay your camera anywhere on the recording canvas.
+- **Shapes & Sizing**: Choose between **Circle** or **Squircle (Rounded Rectangle)** with resizable dimensions and mirror toggling.
 
 ### 5. Multi-Tab & Background Recording Resilience
-- **Unthrottled Web Worker Compositor**: Overcomes modern browser background tab throttling (`requestAnimationFrame` freeze) by driving 60 FPS compositor ticks via a dedicated background worker.
-- Seamlessly record across different browser tabs, windows, and desktop applications without video freezing.
+- **Unthrottled Web Worker Compositor**: Keeps pumping 60 FPS video frames into `canvas.captureStream()` even when you navigate to other browser tabs or background windows.
+- No video freeze, stutter, or dropped frames when multitasking.
 
-### 6. High-Definition Export
+### 6. High-Definition Multi-Format Export
 - High-bitrate 60 FPS **MP4** video output.
-- Instant video preview modal with direct download.
-- Separated vocal and background `.wav` stems.
+- **Animated GIF** creator with NeuQuant neural-net color quantization.
+- **Offline Vocal Stem Separator**: Split post-recording audio into isolated speech `.wav` and background `.wav` stems.
 
 ---
 
 ## Installation as Google Chrome Extension (Manifest V3)
 
-Recordly Studio Pro is fully configured as a Chrome Extension with a quick launcher popup, background service worker, and keyboard shortcuts!
-
-1. Open **Google Chrome** (or Microsoft Edge / Brave).
-2. Go to the extensions management page:
+1. Open **Google Chrome** (or Microsoft Edge / Brave / Opera).
+2. Navigate to the extensions page:
    ```
    chrome://extensions
    ```
-3. Enable **Developer mode** toggle in the top-right corner.
-4. Click **Load unpacked** in the top-left corner.
-5. Select this folder: `E:\net-recoder`
-6. **Done!** Click the Recordly icon in your browser toolbar to open the quick launcher popup, or press **`Ctrl+Shift+R`** anytime to launch the full studio!
+3. Enable the **Developer mode** toggle in the top-right corner.
+4. Click the **Load unpacked** button in the top-left corner.
+5. Select this folder:
+   ```
+   E:\net-recoder
+   ```
+6. **Done!** Click the **Netfie** icon in your toolbar to launch the quick popup or press **`Ctrl+Shift+R`** anytime to launch the full studio!
 
 ---
 
-## Running as a Standalone Web Page
+## Running as a Standalone Web App
 
-You can also run Recordly directly without installing any extension:
+You can also run Netfie Screen Recorder directly in any modern browser without installing the extension:
 
 ### Option 1: Double-Click
-Simply double-click `index.html` to open it in any web browser.
+Double-click `index.html` to run in your default browser.
 
-### Option 2: Local HTTP Server (Recommended)
+### Option 2: Local HTTP Server
 **Using Python:**
 ```bash
 python -m http.server 8080

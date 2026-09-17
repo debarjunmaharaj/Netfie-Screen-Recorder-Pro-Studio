@@ -1,8 +1,8 @@
 {
     "manifest_version":  3,
-    "name":  "Recordly - Studio Screen Recorder",
+    "name":  "Netfie Screen Recorder",
     "version":  "1.0.0",
-    "description":  "Studio-quality screen recorder with presentation effects, vocal separation, background noise cleaner, and smooth smart zoom.",
+    "description":  "Official Netfie Studio Screen Recorder with vocal isolation, background noise cleaner, presentation styling, and smart zoom.",
     "permissions":  [
                         "storage",
                         "tabs"
@@ -29,7 +29,7 @@
                                                                "default":  "Ctrl+Shift+R",
                                                                "mac":  "Command+Shift+R"
                                                            },
-                                         "description":  "Open Recordly Studio"
+                                         "description":  "Open Netfie Screen Recorder"
                                      }
                  },
     "web_accessible_resources":  [

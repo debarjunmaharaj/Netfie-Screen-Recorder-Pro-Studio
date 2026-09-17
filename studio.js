@@ -636,7 +636,7 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
       this.aspectRatios = { '16:9': { width: 1920, height: 1080 }, '9:16': { width: 1080, height: 1920 }, '1:1': { width: 1080, height: 1080 }, '4:3': { width: 1440, height: 1080 } };
       this.config = {
         aspectRatio: '16:9', padding: 60, borderRadius: 18, shadowBlur: 45, shadowOpacity: 0.4,
-        backgroundStyle: 'gradient-sunset', bgColor: '#111827', showWindowFrame: true, windowTitle: 'Recordly Studio Demo',
+        backgroundStyle: 'gradient-sunset', bgColor: '#111827', showWindowFrame: true, windowTitle: 'Netfie Studio Demo',
         showWebcam: false, webcamShape: 'circle', webcamSize: 220, webcamX: 0.85, webcamY: 0.80, webcamMirrored: true, webcamBorder: true,
         highlightClicks: true, smoothZoom: 1.0, targetZoom: 1.0, zoomTargetX: 0.5, zoomTargetY: 0.5, currentPanX: 0.5, currentPanY: 0.5
       };
@@ -1213,7 +1213,7 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
 
     btnDownloadVideo.addEventListener('click', () => {
       if (!currentRecordingBlob) return;
-      exporter.downloadBlob(currentRecordingBlob, `Recordly-Video-${Date.now()}.mp4`);
+      exporter.downloadBlob(currentRecordingBlob, `Netfie-Video-${Date.now()}.mp4`);
     });
 
     btnSeparateVocals.addEventListener('click', async () => {
@@ -1232,10 +1232,10 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
     });
 
     btnDownloadVocal.addEventListener('click', () => {
-      if (separatedAudioResult) exporter.downloadBlob(separatedAudioResult.vocalBlob, `Recordly-Vocals-${Date.now()}.wav`);
+      if (separatedAudioResult) exporter.downloadBlob(separatedAudioResult.vocalBlob, `Netfie-Vocals-${Date.now()}.wav`);
     });
     btnDownloadBg.addEventListener('click', () => {
-      if (separatedAudioResult) exporter.downloadBlob(separatedAudioResult.backgroundBlob, `Recordly-Background-${Date.now()}.wav`);
+      if (separatedAudioResult) exporter.downloadBlob(separatedAudioResult.backgroundBlob, `Netfie-Background-${Date.now()}.wav`);
     });
 
     btnExportGif.addEventListener('click', async () => {
@@ -1256,7 +1256,7 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
           gifProgressText.textContent = `Rendering: ${Math.round(((i + 1) / total) * 100)}%`;
         }
         const gifBlob = new Blob([encoder.finish()], { type: 'image/gif' });
-        exporter.downloadBlob(gifBlob, `Recordly-Demo-${Date.now()}.gif`);
+        exporter.downloadBlob(gifBlob, `Netfie-Demo-${Date.now()}.gif`);
         gifProgressText.textContent = '✓ GIF Downloaded!';
       } catch (e) {
         gifProgressText.textContent = 'GIF Failed: ' + e.message;
@@ -1264,4 +1264,34 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
         btnExportGif.disabled = false;
       }
     });
+
+    // Theme Switcher (Bright / Dark Mode)
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+    const themeIconLight = document.getElementById('themeIconLight');
+    const themeIconDark = document.getElementById('themeIconDark');
+    const savedTheme = localStorage.getItem('netfie_theme') || 'dark';
+
+    function applyTheme(theme) {
+      if (theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        if (themeIconLight) themeIconLight.style.display = 'none';
+        if (themeIconDark) themeIconDark.style.display = 'inline-block';
+        if (btnThemeToggle) btnThemeToggle.title = 'Switch to Dark Mode';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        if (themeIconLight) themeIconLight.style.display = 'inline-block';
+        if (themeIconDark) themeIconDark.style.display = 'none';
+        if (btnThemeToggle) btnThemeToggle.title = 'Switch to Bright Light Mode';
+      }
+      localStorage.setItem('netfie_theme', theme);
+    }
+
+    applyTheme(savedTheme);
+
+    if (btnThemeToggle) {
+      btnThemeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+      });
+    }
   });

@@ -1,4 +1,4 @@
-// Recordly Studio Background Service Worker (Manifest V3)
+// Netfie Screen Recorder Background Service Worker (Manifest V3)
 
 function openOrFocusStudioTab() {
   const studioUrl = chrome.runtime.getURL('index.html');

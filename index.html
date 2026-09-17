@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recordly Web — Studio Screen Recorder & Audio Cleaner</title>
+  <title>Netfie Screen Recorder — Pro Studio & Vocal Isolator</title>
   <style>
-/* Recordly Ultra Studio UI - Extension CSP-safe (no external font imports) */
+/* Netfie Screen Recorder Studio UI - Bright & Dark Theme Support */
 
 :root {
   --bg-app: #090a0f;
   --bg-sidebar: #0f111a;
-  --bg-panel: rgba(22, 25, 38, 0.7);
-  --bg-panel-hover: rgba(30, 35, 52, 0.9);
+  --bg-panel: rgba(22, 25, 38, 0.75);
+  --bg-panel-hover: rgba(30, 35, 52, 0.95);
   --bg-card: #141724;
-  --border-subtle: rgba(255, 255, 255, 0.07);
+  --bg-input: #1a1e2e;
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --border-focus: rgba(129, 140, 248, 0.6);
   --primary: #6366f1;
+  --primary-hover: #4f46e5;
   --primary-glow: rgba(99, 102, 241, 0.35);
   --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
   --accent-cyan: #38bdf8;
@@ -25,6 +27,10 @@
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
+  --header-bg: rgba(12, 14, 22, 0.85);
+  --stage-bg: radial-gradient(circle at center, #151824 0%, #090a0f 100%);
+  --toolbar-bg: rgba(18, 22, 34, 0.92);
+  --modal-overlay-bg: rgba(3, 4, 8, 0.85);
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', 'Helvetica Neue', sans-serif;
   --font-mono: 'Consolas', 'Fira Code', 'Courier New', monospace;
   --radius-xl: 18px;
@@ -33,6 +39,25 @@
   --radius-sm: 6px;
   --radius-pill: 9999px;
   --shadow-float: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] {
+  --bg-app: #f1f5f9;
+  --bg-sidebar: #ffffff;
+  --bg-panel: rgba(255, 255, 255, 0.85);
+  --bg-panel-hover: #f8fafc;
+  --bg-card: #f8fafc;
+  --bg-input: #ffffff;
+  --border-subtle: rgba(15, 23, 42, 0.09);
+  --border-focus: rgba(99, 102, 241, 0.6);
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+  --header-bg: rgba(255, 255, 255, 0.92);
+  --stage-bg: radial-gradient(circle at center, #e2e8f0 0%, #f1f5f9 100%);
+  --toolbar-bg: rgba(255, 255, 255, 0.95);
+  --modal-overlay-bg: rgba(15, 23, 42, 0.65);
+  --shadow-float: 0 20px 40px -15px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 * {
@@ -672,6 +697,124 @@ input:checked + .toggle-slider::before {
 .export-box:hover {
   border-color: rgba(99, 102, 241, 0.4);
 }
+
+/* Theme Toggle Button */
+.btn-theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-theme-toggle:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--primary);
+  transform: rotate(15deg);
+}
+
+/* Light Theme Style Enhancements */
+[data-theme="light"] body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+}
+
+[data-theme="light"] .app-header {
+  background: var(--header-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .brand-name {
+  background: linear-gradient(90deg, #1e293b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .header-center-tools {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .preset-chip {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .preset-chip:hover {
+  color: #0f172a;
+}
+
+[data-theme="light"] .preset-chip.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .audio-meter-pill {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .sidebar-tabs {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .tab-btn {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .tab-btn.active {
+  color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .glass-card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .label-main {
+  color: #0f172a;
+}
+
+[data-theme="light"] select, [data-theme="light"] input[type="text"] {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .floating-toolbar {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .btn-secondary {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .modal-window {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .export-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
   </style>
 </head>
 <body>
@@ -683,7 +826,7 @@ input:checked + .toggle-slider::before {
           <polygon points="5 3 19 12 5 21 5 3"></polygon>
         </svg>
       </div>
-      <span class="brand-name">Recordly</span>
+      <span class="brand-name">Netfie</span>
       <span class="brand-pill">Studio Pro</span>
     </div>
 
@@ -695,8 +838,26 @@ input:checked + .toggle-slider::before {
       <button class="preset-chip" data-aspect="4:3">4:3 Demo</button>
     </div>
 
-    <!-- Right Audio & Recording Indicator -->
+    <!-- Right Audio, Theme Toggle & Recording Indicator -->
     <div class="header-status">
+      <!-- Bright / Dark Mode Switcher -->
+      <button id="btnThemeToggle" class="btn-theme-toggle" title="Switch between Bright & Dark Mode">
+        <svg id="themeIconLight" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="themeIconDark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+
       <div class="audio-meter-pill" title="Live Mic Level & AI Noise Gate">
         <div class="mic-bars-icon">
           <div class="mic-bar-anim" id="micBar1"></div>
@@ -763,7 +924,7 @@ input:checked + .toggle-slider::before {
               </label>
             </div>
             <div class="row-setting">
-              <input type="text" id="inputWindowTitle" value="Recordly Demo — Studio" placeholder="Window Title..." style="width: 100%;">
+              <input type="text" id="inputWindowTitle" value="Netfie Studio Demo" placeholder="Window Title..." style="width: 100%;">
             </div>
           </div>
 
@@ -949,7 +1110,7 @@ input:checked + .toggle-slider::before {
           <div class="brand-logo-wrap" style="width: 28px; height: 28px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           </div>
-          <h2 style="font-size: 1.05rem; font-weight: 700;">Recordly Studio — Export & Processing</h2>
+          <h2 style="font-size: 1.05rem; font-weight: 700;">Netfie Screen Recorder — Export & Processing</h2>
         </div>
         <button id="btnCloseModal" style="background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer;">&times;</button>
       </div>
