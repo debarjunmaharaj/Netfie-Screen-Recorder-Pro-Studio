@@ -45,6 +45,6 @@
                                      }
                                  ],
     "content_security_policy":  {
-                                    "extension_pages":  "script-src \u0027self\u0027 \u0027wasm-unsafe-eval\u0027; object-src \u0027self\u0027"
+                                    "extension_pages":  "script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; object-src 'self'"
                                 }
 }

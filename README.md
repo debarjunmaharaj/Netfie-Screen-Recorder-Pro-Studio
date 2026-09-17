@@ -12,12 +12,17 @@ Engineered with **real-time AudioWorklet spectral vocal isolation** (eliminates 
 
 ## Key Features
 
-### 1. Dual Bright & Dark Dashboard Modes
+### 1. 100% Offline & Zero Network Impact (No Internet Needed)
+- **Completely Air-Gapped & Offline**: Functions with zero internet access. Works in airplane mode or on isolated networks.
+- **Zero Outbound Traffic**: Content Security Policy strictly enforces `connect-src 'none'`. No telemetry, no external API calls, and zero bandwidth consumption.
+- **Self-Contained Bundling**: All scripts, fonts, icons, NeuQuant GIF encoders, and Web Audio DSP filters run locally in-browser.
+
+### 2. Dual Bright & Dark Dashboard Modes
 - **One-Click Theme Toggle**: Instantly switch between an elegant, eye-friendly **Dark Studio** mode and a crisp, modern **Bright Light** mode.
 - **Theme Memory**: Automatically saves your preference in `localStorage` across studio sessions and popup launches.
 - **Refined Visuals**: Custom macOS chrome frames, gradient backdrop presets (Sunset, Nord, Cyber, Emerald), and smooth glassmorphism controls.
 
-### 2. Real-Time Spectral Vocal Isolation (AudioWorklet)
+### 3. Real-Time Spectral Vocal Isolation (AudioWorklet)
 - **Continuous Background Profiling**: Automatically listens to the background noise floor during pauses and subtracts it from the signal via spectral subtraction (Wiener filtering).
 - **Speech-Band Hard Masking**: Filters out everything outside the human vocal register (85Hz - 3,500Hz) so only clean speech reaches the recording.
 - **Dynamic Speech Gate & Compressor**: Eliminates low-volume room hiss and evens out loud audio spikes.
@@ -32,11 +37,17 @@ Engineered with **real-time AudioWorklet spectral vocal isolation** (eliminates 
 - **Picture-in-Picture Bubble**: Overlay your camera anywhere on the recording canvas.
 - **Shapes & Sizing**: Choose between **Circle** or **Squircle (Rounded Rectangle)** with resizable dimensions and mirror toggling.
 
-### 5. Multi-Tab & Background Recording Resilience
+### 5. Custom Brand Logo & Watermark Overlay
+- **Image Upload**: Upload any PNG, JPG, SVG, or WebP logo file directly into your recording.
+- **Corner Positioning**: Snap watermark dynamically to **Top Right**, **Top Left**, **Bottom Right**, or **Bottom Left**.
+- **Live Scaling & Opacity**: Adjust size slider (40px–260px) and transparency (10%–100%) in real-time with automatic drop-shadow for high contrast against any video background.
+- **Hard-Baked Export**: Watermark is rendered straight into the composited canvas stream, ensuring it's included in live MP4 recordings and exported GIFs.
+
+### 6. Multi-Tab & Background Recording Resilience
 - **Unthrottled Web Worker Compositor**: Keeps pumping 60 FPS video frames into `canvas.captureStream()` even when you navigate to other browser tabs or background windows.
 - No video freeze, stutter, or dropped frames when multitasking.
 
-### 6. High-Definition Multi-Format Export
+### 7. High-Definition Multi-Format Export
 - High-bitrate 60 FPS **MP4** video output.
 - **Animated GIF** creator with NeuQuant neural-net color quantization.
 - **Offline Vocal Stem Separator**: Split post-recording audio into isolated speech `.wav` and background `.wav` stems.

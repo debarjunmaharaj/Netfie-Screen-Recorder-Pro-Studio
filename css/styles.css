@@ -1,5 +1,4 @@
-/* Recordly Ultra Studio UI - Matching Recordly.dev Desktop App */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Recordly Ultra Studio UI - Matching Recordly.dev Desktop App (100% Offline) */
 
 :root {
   --bg-app: #090a0f;
@@ -19,8 +18,8 @@
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', 'Helvetica Neue', sans-serif;
+  --font-mono: 'Consolas', 'Fira Code', 'Courier New', monospace;
   --radius-xl: 18px;
   --radius-lg: 12px;
   --radius-md: 8px;

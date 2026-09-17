@@ -986,6 +986,53 @@ input:checked + .toggle-slider::before {
               <button id="btnZoomReset" class="btn btn-secondary" style="flex: 1; font-size: 0.78rem;">Reset</button>
             </div>
           </div>
+
+          <!-- Brand Logo & Watermark -->
+          <div class="glass-card">
+            <div class="card-header">
+              <span class="card-title">Brand Logo & Watermark</span>
+              <label class="switch">
+                <input type="checkbox" id="toggleLogo">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="label-desc" style="margin-bottom: 12px;">Add your custom brand logo or image watermark onto the recorded video canvas.</div>
+            
+            <div style="margin-bottom: 12px;">
+              <input type="file" id="inputLogoFile" accept="image/*" style="display: none;">
+              <button id="btnUploadLogo" class="btn btn-secondary" style="width: 100%; font-size: 0.8rem; margin-bottom: 8px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Choose Logo Image...
+              </button>
+              <div id="logoPreviewStatus" style="font-size: 0.75rem; color: var(--text-dim); text-align: center;">No logo uploaded</div>
+            </div>
+
+            <div class="row-setting">
+              <span class="label-main">Position</span>
+              <select id="selectLogoPosition" style="width: 170px;">
+                <option value="top-right">Top Right</option>
+                <option value="top-left">Top Left</option>
+                <option value="bottom-right" selected>Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+              </select>
+            </div>
+
+            <div class="row-setting">
+              <span class="label-main">Logo Size</span>
+              <div class="slider-group" style="width: 170px;">
+                <input type="range" id="rangeLogoSize" min="40" max="260" value="120">
+                <span id="valLogoSize" class="slider-val">120px</span>
+              </div>
+            </div>
+
+            <div class="row-setting">
+              <span class="label-main">Opacity</span>
+              <div class="slider-group" style="width: 170px;">
+                <input type="range" id="rangeLogoOpacity" min="10" max="100" value="90">
+                <span id="valLogoOpacity" class="slider-val">90%</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- TAB 2: AUDIO NOISE CLEANER & VOCALS -->

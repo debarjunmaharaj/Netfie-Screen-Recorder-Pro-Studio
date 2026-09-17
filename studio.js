@@ -477,8 +477,10 @@
         aspectRatio: '16:9', padding: 60, borderRadius: 18, shadowBlur: 45, shadowOpacity: 0.4,
         backgroundStyle: 'gradient-sunset', bgColor: '#111827', showWindowFrame: true, windowTitle: 'Netfie Studio Demo',
         showWebcam: false, webcamShape: 'circle', webcamSize: 220, webcamX: 0.85, webcamY: 0.80, webcamMirrored: true, webcamBorder: true,
-        highlightClicks: true, smoothZoom: 1.0, targetZoom: 1.0, zoomTargetX: 0.5, zoomTargetY: 0.5, currentPanX: 0.5, currentPanY: 0.5
+        highlightClicks: true, smoothZoom: 1.0, targetZoom: 1.0, zoomTargetX: 0.5, zoomTargetY: 0.5, currentPanX: 0.5, currentPanY: 0.5,
+        showLogo: false, logoPosition: 'bottom-right', logoSize: 120, logoOpacity: 0.9
       };
+      this.logoImage = null;
       this.ripples = []; this.isRunning = false; this.screenVideo = null; this.webcamVideo = null;
       this.bgWorker = null;
       this.updateResolution();
@@ -543,6 +545,50 @@
       else this.drawPlaceholder(ctx, W, H);
       if (this.config.showWebcam && this.webcamVideo && this.webcamVideo.videoWidth > 0) this.drawWebcam(ctx, W, H);
       this.drawRipples(ctx, W, H);
+      if (this.config.showLogo && this.logoImage) this.drawLogo(ctx, W, H);
+    }
+
+    drawLogo(ctx, W, H) {
+      const img = this.logoImage;
+      if (!img || !img.complete || img.naturalWidth === 0) return;
+
+      const targetW = Number(this.config.logoSize) || 120;
+      const aspect = img.naturalWidth / img.naturalHeight;
+      const targetH = targetW / aspect;
+      const margin = 32;
+
+      let x = 0;
+      let y = 0;
+
+      switch (this.config.logoPosition) {
+        case 'top-left':
+          x = margin;
+          y = margin;
+          break;
+        case 'top-right':
+          x = W - targetW - margin;
+          y = margin;
+          break;
+        case 'bottom-left':
+          x = margin;
+          y = H - targetH - margin;
+          break;
+        case 'bottom-right':
+        default:
+          x = W - targetW - margin;
+          y = H - targetH - margin;
+          break;
+      }
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.05, Math.min(1.0, Number(this.config.logoOpacity) || 0.9));
+      // Subtle drop shadow for clarity across all backgrounds
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
+      ctx.drawImage(img, x, y, targetW, targetH);
+      ctx.restore();
     }
 
     drawBackground(ctx, W, H) {
@@ -838,6 +884,66 @@
       document.getElementById('valWebcamSize').textContent = `${e.target.value}px`;
     });
     document.getElementById('toggleWebcamMirror').addEventListener('change', (e) => compositor.config.webcamMirrored = e.target.checked);
+
+    // Brand Logo & Watermark Controls
+    const toggleLogo = document.getElementById('toggleLogo');
+    const btnUploadLogo = document.getElementById('btnUploadLogo');
+    const inputLogoFile = document.getElementById('inputLogoFile');
+    const logoPreviewStatus = document.getElementById('logoPreviewStatus');
+    const selectLogoPosition = document.getElementById('selectLogoPosition');
+    const rangeLogoSize = document.getElementById('rangeLogoSize');
+    const valLogoSize = document.getElementById('valLogoSize');
+    const rangeLogoOpacity = document.getElementById('rangeLogoOpacity');
+    const valLogoOpacity = document.getElementById('valLogoOpacity');
+
+    if (toggleLogo) {
+      toggleLogo.addEventListener('change', (e) => {
+        compositor.config.showLogo = e.target.checked;
+      });
+    }
+
+    if (btnUploadLogo && inputLogoFile) {
+      btnUploadLogo.addEventListener('click', () => inputLogoFile.click());
+      inputLogoFile.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = new Image();
+          img.onload = () => {
+            compositor.logoImage = img;
+            compositor.config.showLogo = true;
+            if (toggleLogo) toggleLogo.checked = true;
+            if (logoPreviewStatus) {
+              logoPreviewStatus.innerHTML = `<span style="color:#10b981">✓ Loaded: ${file.name}</span>`;
+            }
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (selectLogoPosition) {
+      selectLogoPosition.addEventListener('change', (e) => {
+        compositor.config.logoPosition = e.target.value;
+      });
+    }
+
+    if (rangeLogoSize && valLogoSize) {
+      rangeLogoSize.addEventListener('input', (e) => {
+        compositor.config.logoSize = parseInt(e.target.value, 10);
+        valLogoSize.textContent = `${e.target.value}px`;
+      });
+    }
+
+    if (rangeLogoOpacity && valLogoOpacity) {
+      rangeLogoOpacity.addEventListener('input', (e) => {
+        compositor.config.logoOpacity = parseInt(e.target.value, 10) / 100;
+        valLogoOpacity.textContent = `${e.target.value}%`;
+      });
+    }
 
     // Audio DSP Controls
     document.getElementById('toggleNoiseCleaner').addEventListener('change', (e) => audioProcessor.setNoiseCleaner(e.target.checked));
