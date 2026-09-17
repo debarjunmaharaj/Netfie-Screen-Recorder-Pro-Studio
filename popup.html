@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recordly</title>
+  <style>
+    :root {
+      --bg-main: #0b0f17;
+      --bg-card: #151d2c;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #ec4899;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body {
+      width: 320px;
+      background: var(--bg-main);
+      color: var(--text);
+      padding: 16px;
+      user-select: none;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.3px;
+    }
+    .version-tag {
+      font-size: 10px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .hero-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      transition: all 0.2s ease;
+      margin-bottom: 14px;
+    }
+    .hero-btn:hover {
+      background: linear-gradient(135deg, var(--primary-hover), #7c3aed);
+      transform: translateY(-1px);
+    }
+    .quick-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .feature-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 5px 0;
+      color: var(--text-muted);
+    }
+    .feature-val {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .kbd-chip {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 10px;
+      color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <div class="logo-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      </div>
+      <span class="brand-title">Recordly</span>
+    </div>
+    <span class="version-tag">EXTENSION</span>
+  </div>
+
+  <button id="btnOpenStudio" class="hero-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon></svg>
+    Launch Studio Recorder
+  </button>
+
+  <div class="quick-card">
+    <div class="feature-row">
+      <span>Output Format</span>
+      <span class="feature-val">MP4 (60 FPS)</span>
+    </div>
+    <div class="feature-row">
+      <span>DSP Noise Cleaner</span>
+      <span class="feature-val" style="color: #34d399;">Active Gate</span>
+    </div>
+    <div class="feature-row">
+      <span>Vocal Separator</span>
+      <span class="feature-val">Offline Stem Splitting</span>
+    </div>
+    <div class="feature-row">
+      <span>Multi-Tab Capture</span>
+      <span class="feature-val">Background Resilient</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Quick Shortcut</span>
+    <span class="kbd-chip">Ctrl+Shift+R</span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
