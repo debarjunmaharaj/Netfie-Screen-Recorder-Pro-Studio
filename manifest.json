@@ -36,6 +36,7 @@
                                      {
                                          "resources":  [
                                                            "studio.js",
+                                                           "compositor-worker.js",
                                                            "assets/*"
                                                        ],
                                          "matches":  [

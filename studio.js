@@ -195,310 +195,142 @@
     global.GifEncoder = GifEncoder;
   })(window);
 
-  /* 2. STUDIO AUDIO PROCESSOR — Real-Time Spectral Vocal Isolation */
+  /* 2. STUDIO AUDIO PROCESSOR — Pure Web Audio DSP Vocal Isolation (100% CSP Compliant) */
   class StudioAudioProcessor {
     constructor() {
       this.audioCtx = null;
       this.cleanDestination = null;
       this.analyzer = null;
-      this.workletNode = null;
       this.micGainNode = null;
       this.micSource = null;
-      this.sysSource = null;
+      this.gateGain = null;
       this.masterGain = null;
       this.isGatingActive = false;
+      this.animFrameId = null;
       this.settings = {
         noiseCleanerEnabled: true,
         gateThreshold: -50,
-        clarityBoost: 3.5,
+        clarityBoost: 4.0,
         micVolume: 1.0,
         systemVolume: 1.0
       };
-      this._levelCache = { level: 0, isGated: false };
     }
 
     async init(micStream, sysStream = null) {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (!this.audioCtx || this.audioCtx.state === 'closed') {
-        this.audioCtx = new AudioContextClass({ latencyHint: 'interactive', sampleRate: 48000 });
+        this.audioCtx = new AudioContextClass({ latencyHint: 'interactive' });
       }
       if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
 
-      this.cleanDestination = this.audioCtx.createMediaStreamDestination();
       const ctx = this.audioCtx;
 
-      // ── Spectral Vocal Isolation WorkletProcessor (inline blob) ──────────────
-      // Uses FFT-based Wiener filtering: estimates noise floor during silence,
-      // then subtracts it from each FFT bin, retaining only vocal energy (85–3500 Hz).
-      const workletCode = `
-class VocalIsolationProcessor extends AudioWorkletProcessor {
-  constructor() {
-    super();
-    this._fftSize = 2048;
-    this._hopSize = 512;
-    this._inputBuf = new Float32Array(this._fftSize);
-    this._inputPos = 0;
-    this._noiseFloor = new Float32Array(this._fftSize / 2 + 1).fill(1e-6);
-    this._noiseAlpha = 0.98;       // how fast noise floor adapts (higher = slower)
-    this._vocalLo = 85;            // Hz — low vocal boundary
-    this._vocalHi = 3500;          // Hz — high vocal boundary  
-    this._enabled = true;
-    this._threshold = -50;         // dB gate threshold
-    this.port.onmessage = (e) => {
-      if (e.data.enabled !== undefined) this._enabled = e.data.enabled;
-      if (e.data.threshold !== undefined) this._threshold = e.data.threshold;
-    };
-  }
-
-  // Hann window
-  _hann(n, N) { return 0.5 * (1 - Math.cos(2 * Math.PI * n / (N - 1))); }
-
-  // Real FFT (Cooley-Tukey, radix-2, in-place) on Float32Array of length N (power of 2)
-  _fft(re, im) {
-    const N = re.length;
-    for (let i = 1, j = 0; i < N; i++) {
-      let bit = N >> 1;
-      for (; j & bit; bit >>= 1) j ^= bit;
-      j ^= bit;
-      if (i < j) {
-        [re[i], re[j]] = [re[j], re[i]];
-        [im[i], im[j]] = [im[j], im[i]];
-      }
-    }
-    for (let len = 2; len <= N; len <<= 1) {
-      const ang = -2 * Math.PI / len;
-      const wRe = Math.cos(ang), wIm = Math.sin(ang);
-      for (let i = 0; i < N; i += len) {
-        let curRe = 1, curIm = 0;
-        for (let j = 0; j < len / 2; j++) {
-          const uRe = re[i+j], uIm = im[i+j];
-          const vRe = re[i+j+len/2]*curRe - im[i+j+len/2]*curIm;
-          const vIm = re[i+j+len/2]*curIm + im[i+j+len/2]*curRe;
-          re[i+j] = uRe+vRe; im[i+j] = uIm+vIm;
-          re[i+j+len/2] = uRe-vRe; im[i+j+len/2] = uIm-vIm;
-          const tmp = curRe*wRe - curIm*wIm;
-          curIm = curRe*wIm + curIm*wRe; curRe = tmp;
-        }
-      }
-    }
-  }
-
-  // IFFT: conjugate → FFT → conjugate → divide by N
-  _ifft(re, im) {
-    const N = re.length;
-    for (let i = 0; i < N; i++) im[i] = -im[i];
-    this._fft(re, im);
-    for (let i = 0; i < N; i++) { re[i] /= N; im[i] = -im[i]/N; }
-  }
-
-  process(inputs, outputs) {
-    const input = inputs[0];
-    const output = outputs[0];
-    if (!input || !input[0]) return true;
-    const inCh = input[0];
-    const outCh = output[0];
-
-    if (!this._enabled) {
-      outCh.set(inCh);
-      return true;
-    }
-
-    const N = this._fftSize;
-    const sr = sampleRate;
-    const bins = N / 2 + 1;
-    const hzPerBin = sr / N;
-    const loIdx = Math.max(1, Math.floor(this._vocalLo / hzPerBin));
-    const hiIdx = Math.min(bins - 1, Math.ceil(this._vocalHi / hzPerBin));
-
-    // Accumulate input samples
-    for (let i = 0; i < inCh.length; i++) {
-      this._inputBuf[this._inputPos++] = inCh[i];
-      if (this._inputPos >= N) this._inputPos = 0;
-    }
-
-    // Build windowed frame
-    const re = new Float32Array(N);
-    const im = new Float32Array(N);
-    for (let i = 0; i < N; i++) {
-      const idx = (this._inputPos + i) % N;
-      re[i] = this._inputBuf[idx] * this._hann(i, N);
-    }
-
-    // Forward FFT
-    this._fft(re, im);
-
-    // Compute magnitude spectrum
-    const mag = new Float32Array(bins);
-    let energy = 0;
-    for (let k = 0; k < bins; k++) {
-      mag[k] = Math.sqrt(re[k]*re[k] + im[k]*im[k]);
-      energy += mag[k];
-    }
-
-    // Check signal level (dB RMS) to detect speech vs silence
-    let rms = 0;
-    for (let i = 0; i < inCh.length; i++) rms += inCh[i]*inCh[i];
-    rms = Math.sqrt(rms / inCh.length);
-    const db = rms > 1e-5 ? 20 * Math.log10(rms) : -100;
-    const isSpeech = db > this._threshold;
-
-    // Update noise floor estimate during silence (Wiener-style)
-    if (!isSpeech) {
-      for (let k = 0; k < bins; k++) {
-        this._noiseFloor[k] = this._noiseAlpha * this._noiseFloor[k]
-                            + (1 - this._noiseAlpha) * mag[k];
-      }
-      // If below gate, output silence
-      for (let i = 0; i < outCh.length; i++) outCh[i] = 0;
-      this.port.postMessage({ gated: true, level: rms });
-      return true;
-    }
-
-    // Spectral subtraction + vocal band masking
-    for (let k = 0; k < bins; k++) {
-      // Subtract noise estimate (over-subtraction factor 1.5 for cleaner result)
-      let cleanMag = mag[k] - 1.5 * this._noiseFloor[k];
-      if (cleanMag < 0) cleanMag = 0;
-
-      // Hard mask: zero out everything outside vocal band
-      if (k < loIdx || k > hiIdx) cleanMag = 0;
-
-      // Apply gain ratio to complex spectrum
-      const gain = mag[k] > 1e-8 ? cleanMag / mag[k] : 0;
-      re[k] *= gain;
-      im[k] *= gain;
-
-      // Mirror for conjugate symmetry (IFFT requirement)
-      if (k > 0 && k < N/2) {
-        re[N - k] = re[k];
-        im[N - k] = -im[k];
-      }
-    }
-
-    // Inverse FFT → back to time domain
-    this._ifft(re, im);
-
-    // Write output (just take real part; use overlap-add scaled by hop ratio)
-    const scale = this._hopSize / N * 2;
-    for (let i = 0; i < outCh.length; i++) {
-      outCh[i] = Math.max(-1, Math.min(1, re[i % N] * scale * 3.0));
-    }
-
-    this.port.postMessage({ gated: false, level: rms });
-    return true;
-  }
-}
-registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
-`;
-
-      // Register the worklet from a blob URL
-      const workletBlob = new Blob([workletCode], { type: 'application/javascript' });
-      const workletUrl = URL.createObjectURL(workletBlob);
-
-      try {
-        await ctx.audioWorklet.addModule(workletUrl);
-        this.workletNode = new AudioWorkletNode(ctx, 'vocal-isolation-processor', {
-          numberOfInputs: 1,
-          numberOfOutputs: 1,
-          outputChannelCount: [1]
-        });
-        this.workletNode.port.onmessage = (e) => {
-          this.isGatingActive = e.data.gated;
-          this._levelCache = { level: Math.min(1, e.data.level * 8), isGated: e.data.gated };
-        };
-        // Send initial settings
-        this.workletNode.port.postMessage({
-          enabled: this.settings.noiseCleanerEnabled,
-          threshold: this.settings.gateThreshold
-        });
-      } catch (err) {
-        console.warn('AudioWorklet failed, falling back to biquad chain:', err);
-        this.workletNode = null;
+      // Reset existing micSource if re-connecting
+      if (this.micSource) {
+        try { this.micSource.disconnect(); } catch (e) {}
+        this.micSource = null;
       }
 
-      // ── Compressor + Master Gain + Analyser (always present) ─────────────────
-      const compressor = ctx.createDynamicsCompressor();
-      compressor.threshold.value = -20;
-      compressor.knee.value = 10;
-      compressor.ratio.value = 4;
-      compressor.attack.value = 0.003;
-      compressor.release.value = 0.15;
+      this.cleanDestination = ctx.createMediaStreamDestination();
 
+      // Master gain
       this.masterGain = ctx.createGain();
       this.masterGain.gain.value = 1.2;
 
+      // Dynamics Compressor (smooths vocal peaks, keeps level consistent)
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -22;
+      compressor.knee.value = 10;
+      compressor.ratio.value = 4.0;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.15;
+
+      // Master Analyser for live meter
       this.analyzer = ctx.createAnalyser();
       this.analyzer.fftSize = 512;
       this.analyzer.smoothingTimeConstant = 0.75;
 
-      this.cleanDestination = ctx.createMediaStreamDestination();
+      // Vocal Isolation Filter Chain:
+      // 1. HighPass (85Hz) — strips desk rumble, AC hum, wind
+      const highPass = ctx.createBiquadFilter();
+      highPass.type = 'highpass';
+      highPass.frequency.value = 85;
 
-      // ── Connect mic through worklet → compressor → master → output ───────────
+      // 2. LowPass (3600Hz) — strips keyboard clatter, coil whine, fan hiss
+      const lowPass = ctx.createBiquadFilter();
+      lowPass.type = 'lowpass';
+      lowPass.frequency.value = 3600;
+
+      // 3. Clarity Peak EQ (2800Hz) — vocal presence boost
+      const clarityEQ = ctx.createBiquadFilter();
+      clarityEQ.type = 'peaking';
+      clarityEQ.frequency.value = 2800;
+      clarityEQ.gain.value = this.settings.clarityBoost;
+
+      // 4. Noise Gate Gain
+      this.gateGain = ctx.createGain();
+      this.gateGain.gain.value = 1.0;
+
+      // Wire filter chain
+      highPass.connect(lowPass);
+      lowPass.connect(clarityEQ);
+      clarityEQ.connect(this.gateGain);
+      this.gateGain.connect(compressor);
+      compressor.connect(this.masterGain);
+      this.masterGain.connect(this.analyzer);
+      this.masterGain.connect(this.cleanDestination);
+
       if (micStream && micStream.getAudioTracks().length > 0) {
         this.micSource = ctx.createMediaStreamSource(micStream);
         this.micGainNode = ctx.createGain();
         this.micGainNode.gain.value = this.settings.micVolume;
         this.micSource.connect(this.micGainNode);
-
-        if (this.workletNode) {
-          this.micGainNode.connect(this.workletNode);
-          this.workletNode.connect(compressor);
-        } else {
-          // Fallback: biquad vocal band-pass
-          const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 85;
-          const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3500;
-          const eq = ctx.createBiquadFilter(); eq.type = 'peaking'; eq.frequency.value = 2800; eq.gain.value = 4;
-          const gate = ctx.createGain(); gate.gain.value = 1.0;
-          this.micGainNode.connect(hp); hp.connect(lp); lp.connect(eq); eq.connect(gate); gate.connect(compressor);
-          this._fallbackGate = gate;
-          this._startFallbackGate(ctx);
-        }
-
-        compressor.connect(this.masterGain);
-        this.masterGain.connect(this.analyzer);
-        this.masterGain.connect(this.cleanDestination);
+        this.micGainNode.connect(highPass);
       }
 
-      // ── System audio is intentionally excluded from clean vocal stream ────────
-      // (background music / app sounds go through unprocessed only if user wants it)
-      // System audio is NOT routed to cleanDestination — only pure mic vocals are.
-
+      this.startNoiseGateLoop();
       return this.cleanDestination.stream;
     }
 
-    _startFallbackGate(ctx) {
-      if (!this._fallbackGate || !this.analyzer) return;
-      const buf = new Float32Array(512);
-      const tick = () => {
-        if (!ctx || ctx.state === 'closed') return;
-        this.analyzer.getFloatTimeDomainData(buf);
-        let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
-        const db = Math.sqrt(sum / buf.length) > 1e-5 ? 20 * Math.log10(Math.sqrt(sum / buf.length)) : -100;
-        const t = ctx.currentTime;
-        if (db > this.settings.gateThreshold) {
-          this._fallbackGate.gain.setTargetAtTime(1.0, t, 0.02);
+    startNoiseGateLoop() {
+      if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+      if (!this.analyzer) return;
+
+      const buffer = new Float32Array(this.analyzer.fftSize);
+      const updateGate = () => {
+        if (!this.audioCtx || this.audioCtx.state === 'closed') return;
+        if (this.settings.noiseCleanerEnabled && this.gateGain) {
+          this.analyzer.getFloatTimeDomainData(buffer);
+          let sum = 0;
+          for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
+          const rms = Math.sqrt(sum / buffer.length);
+          const db = rms > 0.00001 ? 20 * Math.log10(rms) : -100;
+          const now = this.audioCtx.currentTime;
+          if (db > this.settings.gateThreshold) {
+            this.gateGain.gain.setTargetAtTime(1.0, now, 0.02);
+            this.isGatingActive = false;
+          } else {
+            this.gateGain.gain.setTargetAtTime(0.005, now, 0.12);
+            this.isGatingActive = true;
+          }
+        } else if (this.gateGain) {
+          this.gateGain.gain.setValueAtTime(1.0, this.audioCtx.currentTime);
           this.isGatingActive = false;
-        } else {
-          this._fallbackGate.gain.setTargetAtTime(0.0, t, 0.1);
-          this.isGatingActive = true;
         }
-        requestAnimationFrame(tick);
+        this.animFrameId = requestAnimationFrame(updateGate);
       };
-      requestAnimationFrame(tick);
+      this.animFrameId = requestAnimationFrame(updateGate);
     }
 
     setNoiseCleaner(enabled) {
       this.settings.noiseCleanerEnabled = enabled;
-      if (this.workletNode) {
-        this.workletNode.port.postMessage({ enabled });
+      if (!enabled && this.gateGain && this.audioCtx) {
+        this.gateGain.gain.setValueAtTime(1.0, this.audioCtx.currentTime);
       }
     }
 
     setGateThreshold(dbValue) {
       this.settings.gateThreshold = parseFloat(dbValue);
-      if (this.workletNode) {
-        this.workletNode.port.postMessage({ threshold: parseFloat(dbValue) });
-      }
     }
 
     setMicVolume(vol) {
@@ -510,10 +342,10 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
 
     getAudioLevels() {
       if (!this.analyzer) return { level: 0, isGated: false };
-      if (this.workletNode) return this._levelCache;
       const data = new Uint8Array(this.analyzer.frequencyBinCount);
       this.analyzer.getByteFrequencyData(data);
-      let sum = 0; for (let i = 0; i < data.length; i++) sum += data[i];
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) sum += data[i];
       return { level: (sum / data.length) / 255, isGated: this.isGatingActive };
     }
   }
@@ -615,6 +447,13 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
       return this.micStream;
     }
 
+    stopMic() {
+      if (this.micStream) {
+        this.micStream.getTracks().forEach(t => t.stop());
+        this.micStream = null;
+      }
+    }
+
     async startWebcamCapture() {
       this.webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } } });
       this.webcamVideoElement.srcObject = this.webcamStream;
@@ -669,18 +508,10 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
 
       // 2. Unthrottled Web Worker ticker for background tab recording (Chrome/Edge/Firefox freeze rAF when tab is hidden)
       try {
-        const workerBlob = new Blob([
-          `let timer = null;
-           self.onmessage = function(e) {
-             if (e.data === 'start') {
-               if (!timer) timer = setInterval(function() { postMessage('tick'); }, 16);
-             } else if (e.data === 'stop') {
-               if (timer) { clearInterval(timer); timer = null; }
-             }
-           };`
-        ], { type: 'application/javascript' });
-        const workerUrl = URL.createObjectURL(workerBlob);
-        this.bgWorker = new Worker(workerUrl);
+        const workerPath = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL)
+          ? chrome.runtime.getURL('compositor-worker.js')
+          : 'compositor-worker.js';
+        this.bgWorker = new Worker(workerPath);
         this.bgWorker.onmessage = () => {
           if (!this.isRunning) return;
           // When the recorder tab is in the background or visiting other tabs, drive compositor frames via Worker
@@ -923,6 +754,7 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
   document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('renderCanvas');
     const btnStartCapture = document.getElementById('btnStartCapture');
+    const btnToggleMic = document.getElementById('btnToggleMic');
     const btnToggleWebcam = document.getElementById('btnToggleWebcam');
     const btnRecord = document.getElementById('btnRecord');
     const btnPause = document.getElementById('btnPause');
@@ -950,7 +782,7 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
     const vocalSeparator = new VocalSeparator();
     const exporter = new MediaExporter();
 
-    let cleanAudioStream = null, timerInterval = null, isCapturingScreen = false, isCapturingWebcam = false, currentRecordingBlob = null, separatedAudioResult = null;
+    let cleanAudioStream = null, timerInterval = null, isCapturingScreen = false, isCapturingMic = false, isCapturingWebcam = false, currentRecordingBlob = null, separatedAudioResult = null;
     compositor.start();
 
     // Tabs
@@ -1132,16 +964,16 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
           compositor.setScreenSource(capture.screenVideoElement);
           isCapturingScreen = true;
           btnStartCapture.innerHTML = `Change Screen`;
-          try {
-            const mic = await capture.startMicCapture();
-            cleanAudioStream = await audioProcessor.init(mic, stream);
-          } catch (micErr) {
-            cleanAudioStream = await audioProcessor.init(null, stream);
-          }
+          btnStartCapture.classList.add('btn-primary');
+
+          // Initialize audio with current mic stream if connected
+          cleanAudioStream = await audioProcessor.init(capture.micStream, stream);
+
           btnRecord.disabled = false;
           capture.onStreamEnded = () => {
             isCapturingScreen = false;
             btnStartCapture.innerHTML = `Select Screen`;
+            btnStartCapture.classList.remove('btn-primary');
             if (exporter.isRecording) btnStop.click();
           };
         } else {
@@ -1152,6 +984,33 @@ registerProcessor('vocal-isolation-processor', VocalIsolationProcessor);
         alert("Screen capture error: " + err.message);
       }
     });
+
+    // Mic Connector (Like Screen Select)
+    if (btnToggleMic) {
+      btnToggleMic.addEventListener('click', async () => {
+        try {
+          if (!isCapturingMic) {
+            const mic = await capture.startMicCapture();
+            isCapturingMic = true;
+            btnToggleMic.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg> Mic Connected`;
+            btnToggleMic.classList.add('btn-primary');
+
+            // Wire into live audioProcessor
+            cleanAudioStream = await audioProcessor.init(mic, capture.screenStream);
+          } else {
+            capture.stopMic();
+            isCapturingMic = false;
+            btnToggleMic.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg> Connect Mic`;
+            btnToggleMic.classList.remove('btn-primary');
+
+            // Re-init with null mic
+            cleanAudioStream = await audioProcessor.init(null, capture.screenStream);
+          }
+        } catch (err) {
+          alert("Microphone connection error: " + err.message);
+        }
+      });
+    }
 
     // Webcam
     btnToggleWebcam.addEventListener('click', async () => {
